@@ -1,67 +1,58 @@
-import React, { Component } from 'react'
+import React, {useState, useEffect} from 'react'
+import axios from 'axios'
 import {Container, Row, Button, Image} from 'react-bootstrap'
 import {Link} from 'react-router-dom'
 import {connect} from 'react-redux'
 import {getProfile} from '../publics/actions/users'
-import ModalAddProduct from './modalAddProduct'
-import ModalAddCategory from './modalAddCategory'
+import ModalAddProduct from './Modal/ModalAddProduct'
+import ModalAddCategory from './Modal/ModalAddCategory'
 
-class sideBar extends Component {
-  constructor(props){
-    super(props)
-    this.state = {
-      username: props.username || "dummy",
-      image: props.image || "https://icon-library.net/images/user-login-icon/user-login-icon-17.jpg",
-      email: props.email || "dummy@gmail.com",
-      level: props.level || "regular",
-      fullname: props.fullname || "dummyfullname",
-      userid: props.userid,
-      history: props.history
-    }
-    this.handleLogout = this.handleLogout.bind(this)
-  }
+const SideBar = props => {
 
-  handleLogout = (event) => { 
+   const [image, setImage] = useState(props.image || "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQ7OIaucSrpk8PYGcXaszuEt709_7oKcdt_cONFkc1kvMonUTZI")
+   const [fullname, setfullName] = useState(props.image || "Admin")
+   const [level, setLevel] = useState(props.level)
+   const [userid, setuserId] = useState(props.userid)
+   const [history, setHistory] = useState(props.history)
+
+  const handleLogout = (event) => { 
     window.localStorage.removeItem("token")
     if(window.localStorage.getItem("token") === null)
-      this.props.history.push('/')
+      history.push('/')
   }
 
-  componentDidMount = async() => {
-    await this.props.dispatch(getProfile())
-    this.setState({
-      ...this.props.users.usersProfile
+  useEffect(()=> {
+    axios.get('192.168.1.18:5000/users/profile', {
+            headers:{
+                Authorization: window.localStorage.getItem("token")
+            }
+        })
+    .then(res => {
+      {setfullName(res.data.data.fullname); setLevel(res.data.data.level)}
     })
-  }
+  })
 
-  render(){
     return (
       <div>
-          <Image className="dashboard" src={this.state.image}/><hr/>
+          <Image className="dashboard" src={image}/><hr/>
           <h3 style={{textAlign:'center'}}>Hello ..</h3>
-          <h4 style={{textAlign:'center'}}>{this.state.fullname}</h4><hr/>
+          <h4 style={{textAlign:'center'}}>{fullname}</h4><hr/>
           <Container className="sidebar-buttons ">
             {
-                  this.state.level === "regular" ? 
+                  level === "regular" ? 
                   <Row className="justify-content-md-left">
-                    <ModalAddProduct history={this.state.history}/>
-                    <ModalAddCategory history={this.state.history}/>
+                    <ModalAddProduct history={history}/>
+                    <ModalAddCategory history={history}/>
                   </Row>
                   :''
               }
             <Row className="justify-content-md-left">
-                <Button style={{width:'100%'}} variant="light" onClick={this.handleLogout} >Logout</Button>
+                <Button style={{width:'100%'}} variant="light" onClick={handleLogout} >Logout</Button>
             </Row>
           </Container>
       </div>
     )
   }
-}
 
-const mapStateToProps = (state) => {
-  return{
-    users: state.users
-  }
-}
 
-export default connect(mapStateToProps)(sideBar)
+export default SideBar

@@ -1,66 +1,38 @@
-import React from 'react'
-import { connect } from 'react-redux'
+import React, {useState, useEffect} from 'react'
 import { Route } from 'react-router-dom'
-import { Navbar, Nav, Button, Image, Container, Spinner } from 'react-bootstrap'
+import { Navbar, Nav, Button, Image} from 'react-bootstrap'
 import Sidebar from 'react-sidebar'
 
-import CategoryList from '../components/categoryList'
+import CategoryList from '../components/CategoryList'
 import Inventory from '../the-inventory-vector-logo.svg'
-import DropDownCategory from '../components/dropDownCategory'
-import SideBarUser from '../components/sideBar'
-import { SearchProduct } from '../components/searchProducts'
-import DropDownLimit from '../components/dropDownLimit'
-import DropDownSortBy from '../components/dropDownSort'
+import SideBarUser from '../components/SideBar'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faBars } from '@fortawesome/free-solid-svg-icons'
-import { getProfile } from '../publics/actions/users'
-import { getCategory } from '../publics/actions/category'
 
-class category extends React.Component {
-  constructor (props) {
-    super(props)
-    this.state = {
-      sidebarOpen: false,
-      search:"",
-      userData:undefined
-    }
-    this.onSetSidebarOpen = this.onSetSidebarOpen.bind(this)
+const Category = props => {
+  const [sidebarOpen, setsidebarOpen] = useState(false)
+
+  const onSetSidebarOpen = (open) => {
+    setsidebarOpen(open)
   }
 
-  onSetSidebarOpen (open) {
-    this.setState({ sidebarOpen: open })
-  }
+  if(window.localStorage.getItem("token") === null)
+    props.history.push('/')
 
-  componentDidMount = async () => {
-    if(window.localStorage.getItem("token") === null)
-      this.props.history.push('/')
-      await this.props.dispatch(getProfile())
-      this.setState({
-        userData: this.props.users.usersProfile
-      })
-  }
-
-  render () {
-    console.log(this.props)
     return ( 
       <div>
         <Sidebar
           sidebar={<SideBarUser
-            history={this.props.history}
+            history={props.history}
           />}
-          open={this.state.sidebarOpen}
-          onSetOpen={this.onSetSidebarOpen}
+          open={sidebarOpen}
+          onSetOpen={onSetSidebarOpen}
           styles={{ sidebar: { background: 'white', zIndex: '20', width: '20%', position: 'fixed' } }} />
         <Navbar bg='light' variant='light' className='shadow' fixed='top'>
           <Nav className='mr-auto'>
-            <Button variant='light' onClick={() => this.onSetSidebarOpen(true)}>
+            <Button variant='light' onClick={() => onSetSidebarOpen(true)}>
               <FontAwesomeIcon icon={faBars} />
             </Button>
-            {/* <DropDownCategory history={this.props.history}/> */}
-            {/* <DropDownSortBy history={this.props.history}/> */}
-            {/* <DropDownLimit history={this.props.history}/> */}
-            {/* &nbsp; */}
-            {/* <SearchProduct history={this.props.history}/> */}
            <h3>List of Category</h3>
           </Nav>
           <Navbar.Brand href="/">
@@ -74,7 +46,7 @@ class category extends React.Component {
           render={() => {
             return(
               <div className="container md-5">
-              <CategoryList history={this.props.history} key={window.location.href + this.state}/>
+              <CategoryList history={props.history} key={window.location.href}/>
               </div>
             );
           }} 
@@ -83,12 +55,6 @@ class category extends React.Component {
       </div>
     )
   }
-}
 
-const mapStateToProps = (state) => {
-  return{
-    users: state.users,
-  }
-}
 
-export default connect(mapStateToProps)(category)
+export default Category

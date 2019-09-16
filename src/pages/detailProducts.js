@@ -1,4 +1,4 @@
-import React, { Component } from 'react'
+import React, { useState, Component } from 'react'
 import axios from 'axios'
 import {connect} from 'react-redux'
 import Loader from '../components/Loader';
@@ -8,13 +8,13 @@ import store from '../publics/store'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faArrowLeft } from '@fortawesome/free-solid-svg-icons'
 import {Alert, Modal, Button, Badge} from 'react-bootstrap'
-import ModalEditProduct from '../components/modalEditProduct'
+import ModalEditProduct from '../components/Modal/ModalEditProduct'
 import {Link} from 'react-router-dom'
 import { confirmAlert } from 'react-confirm-alert'; // Import
 import 'react-confirm-alert/src/react-confirm-alert.css'; // Import css
 
 
-class detailProducts extends Component {
+class DetailProducts extends Component {
   constructor(props){
     super(props)
     console.log(props)
@@ -203,6 +203,7 @@ class detailProducts extends Component {
                   <div class='p-0 bd-highlight'>Description: {productData.description}</div>
                   <div class='p-0 bd-highlight'>Category: {productData.category}</div>
                   <div class='p-0 bd-highlight'>Stocks: {productData.quantity}</div> 
+                  
                   <Button variant="outline-primary" onClick={this.addProductQuantity}>&nbsp;Add&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</Button>
                   <br />
                   <Button variant="outline-secondary " onClick={this.reduceProductQuantity}>&nbsp;Reduce&nbsp;</Button> 
@@ -247,4 +248,4 @@ const mapStateToProps = (state) => {
   }
 }
 
-export default connect(mapStateToProps)(detailProducts)
+export default connect(mapStateToProps)(DetailProducts)

@@ -1,10 +1,9 @@
-import React, { Component } from 'react'
+import React, {useState, useEffect, Fragment} from 'react'
+import axios from 'axios'
 import { Link2, Redirect } from 'react-router-dom'
-import { connect } from 'react-redux'
-
 import { Form, Modal } from 'react-bootstrap'
 
-import {register} from '../publics/actions/users'
+import { makeStyles } from '@material-ui/styles';
 import Avatar from '@material-ui/core/Avatar';
 import Button from '@material-ui/core/Button';
 import CssBaseline from '@material-ui/core/CssBaseline';
@@ -16,66 +15,91 @@ import Box from '@material-ui/core/Box';
 import LockOutlinedIcon from '@material-ui/icons/LockOutlined';
 import Typography from '@material-ui/core/Typography';
 
-class formRegister extends Component {
-  constructor (props) {
-    super(props)
+const useStyles = makeStyles({
+  root: {
+    background: 'linear-gradient(45deg, #FE6B8B 30%, #FF8E53 90%)',
+    border: 0,
+    borderRadius: 3,
+    boxShadow: '0 3px 5px 2px rgba(255, 105, 135, .3)',
+    color: 'white',
+    height: 48,
+    padding: '0 30px',
+  },
+});
 
-    this.state = {
-      style: props.style,
-      formData: {
+
+const formStyle = makeStyles({
+  root: {
+      "& label.Mui-focused": {
+      color: "red"
+    },
+      "& .MuiInput-underline:after": {
+      borderBottomColor: "green"
+    },
+      "& .MuiOutlinedInput-root": {
+      "& fieldset": {
+        borderColor: "grey"
+      },
+      "&:hover fieldset": {
+        borderColor: "blue"
+      },
+      "&.Mui-focused fieldset": {
+        borderColor: "red"
+      }
+    }
+  },
+});
+
+const FormRegister = props => {
+   const [style, setStyle] = useState(props.style)
+   const [formData, setFormData] = useState({
         username: '',
         fullname: '',
         email: '',
-        password: ''  
-      },
-      history: props.history
+        password: ''
+   })
+   const [redirectOnCloseModal, setredirectOnCloseModal] = useState(false)
+   const [showModal, setshowModal] = useState(false)
+   const [modalTitle, setmodalTitle] = useState('')
+   const [modalMessage, setmodalMessage] = useState('')
+   const [history, setHistory] = useState(props.history)
+
+  const handleClose = () => {
+        setshowModal(false)
+        if (redirectOnCloseModal)
+        history.push('/')
     }
-    this.handleChange = this.handleChange.bind(this)
-    this.handleSubmit = this.handleSubmit.bind(this)
-  }
 
-  handleClose = () => {
-    this.setState({showModal: false})
-    if (this.state.redirectOnCloseModal)
-    this.props.history.push('/')
-  }
+  const handleChange = (event) =>{
+        let newFormData = {...formData}
+        const target = event.target
+        const name = target.name
+        const value = target.value
+        newFormData[name] = value
+        setFormData(newFormData)
+        console.log(formData)
+    }
 
-  handleChange = (event) => {
-    let newFormData = {...this.state.formData}
-    const target = event.target
-    const name = target.name
-    const value = target.value
-    newFormData[name] = value
-    this.setState({
-      formData: newFormData
-    },()=>{console.log(this.state.formData)})
-  }
-  
-
-  handleSubmit = (event) => {
-    event.preventDefault()
-    this.props.dispatch(register(this.state.formData))
-      .then(res => {
-        this.setState({
-          showModal: true,
-          modalTitle:"Success Register",
-          modalMessage: res.action.payload.data.message,
-          redirectOnCloseModal: true
-        })
+  const handleSubmit = (event) => {
+        event.preventDefault();
+        axios.post('http://localhost:5000/users/register', formData)
+         .then(res => {
+            setshowModal(true)
+            setmodalTitle("Success Register")
+            setmodalMessage(res.data.message)
+            setredirectOnCloseModal(true)
+         })
+         .catch(() => {
+            setshowModal(true)
+            setmodalTitle("Failed Register")
+            setmodalMessage("Data is not valid")
       })
-      .catch(()=>{
-        this.setState({
-          showModal:true,
-          modalTitle:"Failed Register",
-          modalMessage: this.props.users.errMessage
-        })
-      })
-      
-  }
+    }
 
-  render () {
-    const {username, fullname, email, password } = this.state.formData;
+    const {username, fullname, email, password } = formData;
     const isEnabled = username.length > 0 && fullname.length > 0  && email.length > 0 && password.length;
+    const classes = useStyles();
+    const formclasses = formStyle();
     return (
       <Grid container component="main" styles={{height: '100%'}}>
       <CssBaseline />
@@ -93,16 +117,17 @@ class formRegister extends Component {
           <Typography component="h1" variant="h5">
             Sign Up
           </Typography>
-          <form style={{width: '100%', marginTop: '8px'}} noValidate onSubmit={this.handleSubmit}>
+          <form style={{width: '100%', marginTop: '8px'}} noValidate onSubmit={handleSubmit}>
             <TextField
               variant="outlined"
               margin="normal"
               fullWidth
+              className={formclasses.root}
               id="username"
               label="Username"
               name="username"
-              value={this.state.username}
-              onChange={this.handleChange}
+              value={username}
+              onChange={handleChange}
               autoComplete="username"
               autoFocus
               required
@@ -111,11 +136,12 @@ class formRegister extends Component {
               variant="outlined"
               margin="normal"
               fullWidth
+              className={formclasses.root}
               id="fullname"
               label="Full Name"
               name="fullname"
-              value={this.state.fullname}
-              onChange={this.handleChange}
+              value={fullname}
+              onChange={handleChange}
               autoComplete="fullname"
               required
             />
@@ -123,11 +149,12 @@ class formRegister extends Component {
               variant="outlined"
               margin="normal"
               fullWidth
+              className={formclasses.root}
               id="email"
               label="Email Address"
               name="email"
-              value={this.state.email}
-              onChange={this.handleChange}
+              value={email}
+              onChange={handleChange}
               autoComplete="email"
               required
             />
@@ -135,18 +162,20 @@ class formRegister extends Component {
               variant="outlined"
               margin="normal"
               required
+              className={formclasses.root}
               fullWidth
               name="password"
               label="Password"
               type="password"
-              value={this.state.password}
-              onChange={this.handleChange}
+              value={password}
+              onChange={handleChange}
               id="password"
               autoComplete="current-password"
             />
             <Button
               type="submit"
               fullWidth
+              className={classes.root}
               variant="contained"
               color="primary"
               style={{margin: '24px 0px 16px'}}
@@ -174,13 +203,13 @@ class formRegister extends Component {
       </Typography>
             </Box>
           </form>
-          <Modal show={this.state.showModal} onHide={this.handleClose}>
+          <Modal show={showModal} onHide={handleClose}>
               <Modal.Header>
-                <Modal.Title>{this.state.modalTitle}</Modal.Title>
+                <Modal.Title>{modalTitle}</Modal.Title>
               </Modal.Header>
-              <Modal.Body>{this.state.modalMessage}</Modal.Body>
+              <Modal.Body>{modalMessage}</Modal.Body>
               <Modal.Footer>
-                <Button variant="warning" onClick={this.handleClose}>
+                <Button variant="warning" onClick={handleClose}>
                   Close
                 </Button>
               </Modal.Footer>
@@ -189,13 +218,7 @@ class formRegister extends Component {
       </Grid>
     </Grid>
     )
-  }
 }
 
-const mapStateToProps = state => {
-  return{
-    users: state.users
-  }
-}
 
-export default connect(mapStateToProps)(formRegister)
+export default FormRegister

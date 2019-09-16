@@ -1,31 +1,26 @@
-import React, { Component } from 'react'
+import React, { useState } from 'react'
 import { Route } from 'react-router-dom'
 
-import FormLogin from '../components/formLogin'
-import FormRegister from '../components/formRegister'
+import FormLogin from '../components/Form/FormLogin'
+import FormRegister from '../components/Form/FormRegister'
 
-class auth extends Component {
-  constructor(props){
-    super(props)
-    this.state = {
-      loggedIn: this.isLoggedIn()
-    }
-    if(this.isLoggedIn())
-      props.history.push('/')
-  }
+const Auth = props => {
 
-  isLoggedIn(){
+  const [loggedIn, setloggedIn] = useState(false)
+
+
+  const isLoggedIn = ()=>{
     return window.localStorage.getItem('token')
   }
 
-  render () {
+
     return (
       <div>
           <Route
             path={'/login'}
             render={() => {
               return (
-                this.state.loggedIn ? this.props.history.push('/')
+                loggedIn ? props.history.push('/')
                   : <div>
                     <FormLogin />
                   </div>
@@ -37,7 +32,7 @@ class auth extends Component {
             render={() => {
               return (
                   <div>
-                    <FormRegister history={this.props.history}/>
+                    <FormRegister history={props.history}/>
                   </div>
               )
             }}
@@ -46,6 +41,6 @@ class auth extends Component {
         </div>
     )
   }
-}
 
-export default auth
+
+export default Auth

@@ -1,5 +1,5 @@
-import React from 'react';
-import {connect} from 'react-redux'
+import React, {useState, useEffect, Fragment} from 'react'
+import axios from 'axios'
 import Table from '@material-ui/core/Table';
 import {Alert, Modal, Button, Badge} from 'react-bootstrap'
 import TableBody from '@material-ui/core/TableBody';
@@ -7,39 +7,31 @@ import TableCell from '@material-ui/core/TableCell';
 import TableHead from '@material-ui/core/TableHead';
 import TableRow from '@material-ui/core/TableRow';
 import Paper from '@material-ui/core/Paper';
-import {getCategory} from '../publics/actions/category'
-import {deleteCategory} from '../publics/actions/category'
 import DeleteIcon from '@material-ui/icons/Delete';
 import EditIcon from '@material-ui/icons/Edit';
 import IconButton from '@material-ui/core/IconButton';
-import ModalEditCategory from '../components/modalEditCategory'
+import ModalEditCategory from '../components/Modal/ModalEditCategory'
+import Loader from '../components/Loader'
 import { confirmAlert } from 'react-confirm-alert'; // Import
 import 'react-confirm-alert/src/react-confirm-alert.css'; // Import css
 
 
 
-class CategoryList extends React.Component {
-  constructor(props){
-    super(props)
+const CategoryList = props => {
+   const [categoryList, setcategoryList] = useState([])
+   const [redirectOnCloseModal, setredirectOnCloseModal] = useState(false)
+   const [showModal, setshowModal] = useState(false)
+   const [modalTitle, setmodalTitle] = useState('')
+   const [modalMessage, setmodalMessage] = useState('')
+   const [history, setHistory] = useState(props.history)
 
-    this.state = {
-      categoryList: [],
-      showModal: false,
-      modalTitle:'',
-      modalMessage:''
-      
-    }
-    console.log(this.state.categoryData)
-    // this.handleDelete = this.handleDelete.bind(this)
-  }
-  
+useEffect(() => {
+   const token = localStorage.getItem('token')
+   axios.get('http://localhost:5000/category', {headers: {authorization: token}})
+   .then(response => setcategoryList(response.data.data))
+    }, []);
 
-  componentDidMount = async () => {
-    await this.props.dispatch(getCategory())
-    this.setState ({categoryList: this.props.category.categoryList})
-}
-
-  handleDelete = (event, id) => {
+const handleDelete = (event, id) => {
     event.preventDefault()
      confirmAlert({
       title: 'Confirm to delete',
@@ -47,26 +39,26 @@ class CategoryList extends React.Component {
       buttons: [
         {
           label: 'Yes',
-          onClick: () => this.props.dispatch(deleteCategory(id))
+          onClick: () => axios.delete(`http://localhost:5000/category/${id}`, {
+            headers:{
+                authorization: window.localStorage.getItem("token")
+            }
+        })
       .then(() => {
-      this.setState({
-        showModal: true,
-        modalTitle: "Success",
-        modalMessage: 'Succes deleting Category',
-        redirectOnCloseModal: true
-      })
+            setshowModal(true)
+            setmodalTitle("Success")
+            setmodalMessage("Category successfully deleted!")
+            setredirectOnCloseModal(true)
     })
-    .catch(() => {
-      this.setState({
-        showModal: true,
-        modalTitle: 'Failed',
-        modalMessage: this.props.category.errMessage
-      })
+      .catch(() => {
+            setshowModal(true)
+            setmodalTitle("Failed")
+            setmodalMessage("Failed to delete! category is a foreign key constant")
     })
         },
         {
           label: 'No',
-          onClick: () => this.props.history.push(`/category/`)
+          onClick: () => history.push(`/category`)
         }
       ]
     });
@@ -74,16 +66,14 @@ class CategoryList extends React.Component {
 }
 
   
-  handleClose = () => {
-      this.setState({showModal: false})
-      if (this.state.redirectOnCloseModal)
-        this.props.history.push('/')
+    const handleClose = () => {
+        setshowModal(false)
+        if (redirectOnCloseModal)
+        history.push('/')
     }
   
+    let no = 1;
 
-  render(){
-  console.log( this.props.category)
-  const {categoryList} = this.state
   return (
     <div>
     
@@ -91,6 +81,7 @@ class CategoryList extends React.Component {
       <Table style={{minWidth: "650"}}>
         <TableHead>
           <TableRow>
+          <TableCell><h3><b>No</b></h3></TableCell>
           <TableCell><h3><b>Categories</b></h3></TableCell>
             <TableCell><h3><b>Action</b></h3></TableCell>
 
@@ -99,44 +90,39 @@ class CategoryList extends React.Component {
         <TableBody>
               {categoryList.length !== 0 ? categoryList.map((category) => {
               return <TableRow key ={category.name}>
+              <TableCell component="th" scope="row"> {no++} </TableCell>
+
                  <TableCell component="th" scope="row" key={category.id}> {category.name} </TableCell>
                  <TableCell component="th" scope="row" >
                    
-                 <ModalEditCategory history={this.props.history} categoryId = {category.id} categoryData={category} />
-                 <IconButton aria-label="Delete" onClick={(event) => this.handleDelete(event, category.id)}>
+                 <ModalEditCategory history={props.history} categoryId = {category.id} categoryData={category} />
+                 <IconButton aria-label="Delete" onClick={(event) => handleDelete(event, category.id)}>
                                            <DeleteIcon /> 
                                         </IconButton>
                  </TableCell>
                  </TableRow>
               })
-              :<p><center>Loading...</center></p>
+              : <Loader />
               } 
         </TableBody>
       </Table>
     </Paper>
-    <Modal show={this.state.showModal} onHide={this.handleClose}>
+    <Modal show={showModal} onHide={handleClose}>
                 <Modal.Header>
-                  <Modal.Title>{this.state.modalTitle}</Modal.Title>
+                  <Modal.Title>{modalTitle}</Modal.Title>
                 </Modal.Header>
                 <Modal.Body>
-                  {this.state.modalMessage}
+                  {modalMessage}
                 </Modal.Body>
                 <Modal.Footer>
-                  <Button variant="secondary" onClick={this.handleClose}>
+                  <Button variant="secondary" onClick={handleClose}>
                     Close
                   </Button>
                 </Modal.Footer>
             </Modal>
     </div>
   );
-}
+
 }
 
-const mapStateToProps = state => {
-  console.log('here')
-  return{
-    category: state.category
-  }
-}
-
-export default connect(mapStateToProps)(CategoryList)
+export default CategoryList

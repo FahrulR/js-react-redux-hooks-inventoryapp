@@ -1,9 +1,10 @@
-import React from 'react'
+import React, {useState, useEffect, Fragment} from 'react'
+import axios from 'axios'
 import { Link2, Redirect } from 'react-router-dom'
-import {connect} from 'react-redux'
 
+
+import { makeStyles } from '@material-ui/styles';
 import { Form, Modal } from 'react-bootstrap'
-import {login} from '../publics/actions/users'
 import Avatar from '@material-ui/core/Avatar';
 import Button from '@material-ui/core/Button';
 import CssBaseline from '@material-ui/core/CssBaseline';
@@ -15,63 +16,84 @@ import Box from '@material-ui/core/Box';
 import LockOutlinedIcon from '@material-ui/icons/LockOutlined';
 import Typography from '@material-ui/core/Typography';
 
+const useStyles = makeStyles({
+  root: {
+    background: 'linear-gradient(45deg, #FE6B8B 30%, #FF8E53 90%)',
+    border: 0,
+    borderRadius: 3,
+    boxShadow: '0 3px 5px 2px rgba(255, 105, 135, .3)',
+    color: 'white',
+    height: 48,
+    padding: '0 30px',
+  },
+});
 
-class formLogin extends React.Component {
-  constructor(props){
-    super(props)
-    this.state = {
-      style: props.style,
-      email: '',
-      password:'',
-      loggedIn:false,
-      showModal:false,
-      modalTitle:'',
-      modalMessage:''
-  }
-    this.handleChange = this.handleChange.bind(this)
-    this.handleSubmit = this.handleSubmit.bind(this)
+const formStyle = makeStyles({
+  root: {
+      "& label.Mui-focused": {
+      color: "red"
+    },
+      "& .MuiInput-underline:after": {
+      borderBottomColor: "green"
+    },
+      "& .MuiOutlinedInput-root": {
+      "& fieldset": {
+        borderColor: "grey"
+      },
+      "&:hover fieldset": {
+        borderColor: "blue"
+      },
+      "&.Mui-focused fieldset": {
+        borderColor: "red"
+      }
+    }
+  },
+});
+
+const FormLogin = props => {
+   const [style, setStyle] = useState(props.style)
+   const [email, setEmail] = useState('')
+   const [password, setPassword] = useState('')
+   const [loggedIn, setloggedIn] = useState(false)
+   const [showModal, setshowModal] = useState(false)
+   const [modalTitle, setmodalTitle] = useState('')
+   const [modalMessage, setmodalMessage] = useState('')
+
+  const handleClose = () => {
+        setshowModal(false)
+    }
+
+  const handleEmail = (event) => {
+        setEmail(event.target.value)
   }
 
-  handleClose = () => {
-    this.setState({showModal: false})
+  const handlePassword = (event) => {
+        setPassword(event.target.value)
   }
 
-  handleChange(event) {
-    const target = event.target
-    const value = target.value
-    const name = target.name
-    this.setState({
-      [name]: value
-    })
-  }
-
-  handleSubmit = async (event) => {
+  const handleSubmit = (event) => {
     event.preventDefault();
     const data = {
-      email: this.state.email, 
-      password: this.state.password
+      email: email, 
+      password: password
   }
 
-  this.props.dispatch(login(data))
-    .then (res => {
-      window.localStorage.setItem("token", res.action.payload.data.token)
-      console.log(window.localStorage.getItem('token'))
-      this.setState({
-        loggedIn:true
+  axios.post('http://localhost:5000/users/login', data)
+         .then(res => {
+          window.localStorage.setItem("token", res.data.token)
+          console.log(window.localStorage.getItem('token'))
+          setloggedIn(true)
+         })
+         .catch(err => {
+            setshowModal(true)
+            setmodalTitle("Failed Login")
+            setmodalMessage("Username or Password is wrong")
       })
-    })
-    .catch (() => {
-      this.setState({
-        showModal:true,
-        modalTitle:"Failed",
-        modalMessage:this.props.users.errMessage
-      })
-    })
   }
 
-  render () {
-    const { email, password } = this.state;
     const isEnabled = email.length > 0 && password.length;
+    const classes = useStyles();
+    const formclasses = formStyle();
     if(window.localStorage.getItem("token")) return <Redirect to="../"/>
     else return (
       <Grid container component="main" styles={{height: '100%'}}>
@@ -90,16 +112,17 @@ class formLogin extends React.Component {
         <Typography component="h1" variant="h5">
           Sign in
         </Typography>
-        <form style={{width: '100%', marginTop: '8px'}} noValidate onSubmit={this.handleSubmit}>
+        <form style={{width: '100%', marginTop: '8px'}} noValidate onSubmit={handleSubmit}>
           <TextField
             variant="outlined"
             margin="normal"
             fullWidth
+            className={formclasses.root}
             id="email"
             label="Email Address"
             name="email"
-            value={this.state.email}
-            onChange={this.handleChange}
+            value={email}
+            onChange={handleEmail}
             autoComplete="email"
             autoFocus
             required
@@ -109,17 +132,19 @@ class formLogin extends React.Component {
             margin="normal"
             required
             fullWidth
+            className={formclasses.root}
             name="password"
             label="Password"
             type="password"
-            value={this.state.password}
-            onChange={this.handleChange}
+            value={password}
+            onChange={handlePassword}
             id="password"
             autoComplete="current-password"
           />
           <Button
             type="submit"
             fullWidth
+            className={classes.root}
             variant="contained"
             color="primary"
             style={{margin: '24px 0px 16px'}}
@@ -147,13 +172,13 @@ class formLogin extends React.Component {
     </Typography>
           </Box>
         </form>
-        <Modal show={this.state.showModal} onHide={this.handleClose}>
+        <Modal show={showModal} onHide={handleClose}>
             <Modal.Header>
-              <Modal.Title>{this.state.modalTitle}</Modal.Title>
+              <Modal.Title>{modalTitle}</Modal.Title>
             </Modal.Header>
-            <Modal.Body>{this.state.modalMessage}</Modal.Body>
+            <Modal.Body>{modalMessage}</Modal.Body>
             <Modal.Footer>
-              <Button variant="warning" onClick={this.handleClose}>
+              <Button variant="warning" onClick={handleClose}>
                 Close
               </Button>
             </Modal.Footer>
@@ -162,12 +187,6 @@ class formLogin extends React.Component {
     </Grid>
   </Grid>
     )
-  }
 }
 
-const mapStateToProps = state => {
-  return{
-    users: state.users
-  }
-}
-export default connect(mapStateToProps)(formLogin)
+export default FormLogin
