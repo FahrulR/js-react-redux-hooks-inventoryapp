@@ -1,4 +1,4 @@
-<h1 align='center'>Inventory Application with React Js + Redux</h1>
+<h1 align='center'>Inventory Application with React Js + Redux + Hooks</h1>
 
 <p align='center'>
   <a href='https://reactjs.org/'>
